@@ -16,38 +16,32 @@
 
 package com.example;
 
-import com.google.api.services.actions_fulfillment.v2.model.*;
+import com.google.actions.api.ActionContext;
 import com.google.actions.api.ActionRequest;
 import com.google.actions.api.ActionResponse;
 import com.google.actions.api.DialogflowApp;
-import com.google.actions.api.ActionContext;
 import com.google.actions.api.ForIntent;
 import com.google.actions.api.response.ResponseBuilder;
-import java.util.ResourceBundle;
-import java.util.Random;
-import java.util.Map;
-import java.util.Arrays;
-import java.util.List;
+import com.google.api.services.actions_fulfillment.v2.model.BasicCard;
+import com.google.api.services.actions_fulfillment.v2.model.Button;
+import com.google.api.services.actions_fulfillment.v2.model.Image;
+import com.google.api.services.actions_fulfillment.v2.model.OpenUrlAction;
+import com.google.api.services.actions_fulfillment.v2.model.SimpleResponse;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.ResourceBundle;
 
 public class FactsAboutGoogle extends DialogflowApp {
+
   // Suggestion chip constants
-  private static final String[] CONFIRMATION_SUGGESTIONS = new String[] {"Sure", "No thanks"};
+  private static final String[] CONFIRMATION_SUGGESTIONS = new String[]{"Sure",
+      "No thanks"};
   private static final HashMap<String, String[]> SINGLE_CATEGORY_SUGGESTIONS;
-
-  static {
-    SINGLE_CATEGORY_SUGGESTIONS = new HashMap<>();
-    SINGLE_CATEGORY_SUGGESTIONS.put("headquarters", new String[] {"Headquarters"});
-    SINGLE_CATEGORY_SUGGESTIONS.put("history", new String[] {"History"});
-  }
-
-  private static final String[] CATEGORY_SUGGESTIONS =
-      Arrays.copyOf(
-          SINGLE_CATEGORY_SUGGESTIONS.values().toArray(),
-          SINGLE_CATEGORY_SUGGESTIONS.values().toArray().length,
-          String[].class);
   // Fact constants
   private static final List<String> INITIAL_CAT_FACTS =
       Arrays.asList("cat_fact_1", "cat_fact_2", "cat_fact_3");
@@ -59,7 +53,8 @@ public class FactsAboutGoogle extends DialogflowApp {
           "google_history_fact_4");
   private static final List<String> INITIAL_HEADQUARTERS_FACTS =
       Arrays.asList(
-          "google_headquarters_fact_1", "google_headquarters_fact_2", "google_headquarters_fact_3");
+          "google_headquarters_fact_1", "google_headquarters_fact_2",
+          "google_headquarters_fact_3");
   // Card constants
   private static final HashMap<String, String> GOOGLE_CARD;
 
@@ -92,9 +87,17 @@ public class FactsAboutGoogle extends DialogflowApp {
     GOOGLEPLEX_BIKE_CARD.put("url", "googleplex_biking_url");
     GOOGLEPLEX_BIKE_CARD.put("a11y", "googleplex_biking_a11y");
   }
-
+  
   private static final List<Map<String, String>> CARDS =
-      Arrays.asList(GOOGLE_CARD, STAN_CARD, GOOGLEPLEX_CARD, GOOGLEPLEX_BIKE_CARD);
+      Arrays.asList(GOOGLE_CARD, STAN_CARD, GOOGLEPLEX_CARD,
+          GOOGLEPLEX_BIKE_CARD);
+
+  static {
+    SINGLE_CATEGORY_SUGGESTIONS = new HashMap<>();
+    SINGLE_CATEGORY_SUGGESTIONS
+        .put("headquarters", new String[]{"Headquarters"});
+    SINGLE_CATEGORY_SUGGESTIONS.put("history", new String[]{"History"});
+  }
 
   @ForIntent("Unrecognized Deep Link")
   public ActionResponse deepLinkWelcome(ActionRequest request) {
@@ -103,8 +106,9 @@ public class FactsAboutGoogle extends DialogflowApp {
     responseBuilder
         .add(
             String.format(
-                rb.getString("deep_link_fallback"), ((String) request.getParameter("any"))))
-        .addSuggestions(CATEGORY_SUGGESTIONS);
+                rb.getString("deep_link_fallback"),
+                ((String) request.getParameter("any"))))
+        .addSuggestions(getCategorySuggestionsList());
 
     return responseBuilder.build();
   }
@@ -138,22 +142,28 @@ public class FactsAboutGoogle extends DialogflowApp {
     List<String> facts = (List<String>) conversationData.get(selectedCategory);
 
     List<String> historyFacts = (List<String>) conversationData.get("history");
-    List<String> headquartersFacts = (List<String>) conversationData.get("headquarters");
+    List<String> headquartersFacts = (List<String>) conversationData
+        .get("headquarters");
     List<String> catFacts = (List<String>) conversationData.get("cats");
 
-    if (historyFacts.isEmpty() && headquartersFacts.isEmpty() && catFacts.isEmpty()) {
+    if (historyFacts.isEmpty() && headquartersFacts.isEmpty() && catFacts
+        .isEmpty()) {
       // no facts are left
       responseBuilder.add(rb.getString("heardItAll")).endConversation();
     } else if (facts.isEmpty()) {
       // Suggest other category if no more facts in current category
-      String otherCategory = ((selectedCategory == "history") ? "history" : "headquarters");
+      String otherCategory = ((selectedCategory == "history") ? "history"
+          : "headquarters");
       String response =
-          String.format(rb.getString("factTransition"), selectedCategory, otherCategory);
+          String.format(rb.getString("factTransition"), selectedCategory,
+              otherCategory);
       List<String> suggestions = new ArrayList<>();
-      Collections.addAll(suggestions, SINGLE_CATEGORY_SUGGESTIONS.get(otherCategory));
+      Collections
+          .addAll(suggestions, SINGLE_CATEGORY_SUGGESTIONS.get(otherCategory));
       // Mention and suggest cats if there are cat facts left
       if (!catFacts.isEmpty()) {
-        response = String.format(rb.getString("factTransitionToCats"), response);
+        response = String
+            .format(rb.getString("factTransitionToCats"), response);
         suggestions.add("Cats");
       }
 
@@ -163,7 +173,8 @@ public class FactsAboutGoogle extends DialogflowApp {
       ActionContext context = new ActionContext("choose_fact-followup", 5);
       context.setParameters(contextParameter);
 
-      responseBuilder.add(response).addSuggestions(suggestions.toArray(new String[0])).add(context);
+      responseBuilder.add(response)
+          .addSuggestions(suggestions.toArray(new String[0])).add(context);
     } else {
       // There are facts remaining in the currently selected category
       Random random = new Random();
@@ -182,10 +193,12 @@ public class FactsAboutGoogle extends DialogflowApp {
       Button learnMoreButton =
           new Button()
               .setTitle(rb.getString("card_link_out_text"))
-              .setOpenUrlAction(new OpenUrlAction().setUrl(rb.getString("card_link_out_url")));
+              .setOpenUrlAction(new OpenUrlAction()
+                  .setUrl(rb.getString("card_link_out_url")));
 
       responseBuilder
-          .add(String.format(rb.getString(selectedCategory), rb.getString(fact)))
+          .add(
+              String.format(rb.getString(selectedCategory), rb.getString(fact)))
           .add(rb.getString("nextFact"))
           .add(
               new BasicCard()
@@ -248,7 +261,8 @@ public class FactsAboutGoogle extends DialogflowApp {
       Button learnMoreButton =
           new Button()
               .setTitle(rb.getString("card_link_out_text"))
-              .setOpenUrlAction(new OpenUrlAction().setUrl(rb.getString("cat_url")));
+              .setOpenUrlAction(
+                  new OpenUrlAction().setUrl(rb.getString("cat_url")));
       List<Button> buttons = new ArrayList<>();
       buttons.add(learnMoreButton);
 
@@ -266,10 +280,22 @@ public class FactsAboutGoogle extends DialogflowApp {
           .add(
               new BasicCard()
                   .setTitle(rb.getString(fact))
-                  .setImage(new Image().setUrl(imageUrl).setAccessibilityText(imageA11y))
+                  .setImage(new Image().setUrl(imageUrl)
+                      .setAccessibilityText(imageA11y))
                   .setButtons(buttons))
           .addSuggestions(CONFIRMATION_SUGGESTIONS);
     }
     return responseBuilder.build();
+  }
+
+  private String[] getCategorySuggestionsList() {
+    List<String> categorySuggestionsList = new ArrayList<String>();
+    for (String[] categorySuggestions : SINGLE_CATEGORY_SUGGESTIONS.values()) {
+      for (String suggestion : categorySuggestions) {
+        categorySuggestionsList.add(suggestion);
+      }
+    }
+    return categorySuggestionsList
+        .toArray(new String[categorySuggestionsList.size()]);
   }
 }
