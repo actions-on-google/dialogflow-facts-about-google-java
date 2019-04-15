@@ -39,8 +39,8 @@ import java.util.ResourceBundle;
 public class FactsAboutGoogle extends DialogflowApp {
 
   // Suggestion chip constants
-  private static final String[] CONFIRMATION_SUGGESTIONS = new String[]{"Sure",
-      "No thanks"};
+  private static final String[] CONFIRMATION_SUGGESTIONS = new String[]{"Sure", "No thanks"};
+  private static final String[] INTENT_SUGGESTIONS = new String[]{"History", "Headquarters"};
   private static final HashMap<String, String[]> SINGLE_CATEGORY_SUGGESTIONS;
   // Fact constants
   private static final List<String> INITIAL_CAT_FACTS =
@@ -87,7 +87,7 @@ public class FactsAboutGoogle extends DialogflowApp {
     GOOGLEPLEX_BIKE_CARD.put("url", "googleplex_biking_url");
     GOOGLEPLEX_BIKE_CARD.put("a11y", "googleplex_biking_a11y");
   }
-  
+
   private static final List<Map<String, String>> CARDS =
       Arrays.asList(GOOGLE_CARD, STAN_CARD, GOOGLEPLEX_CARD,
           GOOGLEPLEX_BIKE_CARD);
@@ -146,8 +146,7 @@ public class FactsAboutGoogle extends DialogflowApp {
         .get("headquarters");
     List<String> catFacts = (List<String>) conversationData.get("cats");
 
-    if (historyFacts.isEmpty() && headquartersFacts.isEmpty() && catFacts
-        .isEmpty()) {
+    if (historyFacts.isEmpty() && headquartersFacts.isEmpty()) {
       // no facts are left
       responseBuilder.add(rb.getString("heardItAll")).endConversation();
     } else if (facts.isEmpty()) {
@@ -241,7 +240,7 @@ public class FactsAboutGoogle extends DialogflowApp {
     if (facts.isEmpty()) {
       responseBuilder
           .add(rb.getString("factTransitionFromCats"))
-          .addSuggestions(CONFIRMATION_SUGGESTIONS)
+          .addSuggestions(INTENT_SUGGESTIONS)
           .removeContext("choose_fact-followup")
           .removeContext("choose_cats-followup");
     } else {
